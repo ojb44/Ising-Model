@@ -1,9 +1,9 @@
 """
 Created on Fri Oct 23 20:36:38 2020
 
-Author: OllieBreach
+Author: Ollie Breach and James Walkling
 
-Description:
+Description: Implementation of Ising model with both Wolff and Metropolis algorithms.
 """
 
 import numpy as np
@@ -82,21 +82,21 @@ class Board:
         c=[init_pos]  #cluster
         f_old=[init_pos]  #frontier
 
-        while len(f_old) != 0:
+        while len(f_old) != 0:  #updates the frontier - i.e. expands it outwards with the checking procedure
 
             f_new=[]
 
-            for pos in f_old:
+            for pos in f_old:  #for each spin in frontier, adds neighbouring spins with a probability if they are the same spin
 
                 this_spin=self.get_spin(pos)
                 for neighb in self.neighbours(pos):
 
                     if self.get_spin(neighb)==this_spin:
                         if neighb not in c:
-                            if np.random.random() < 1-np.exp(-2*J/(k*T)):
-                                f_new.append(neighb)
-                                c.append(neighb)
-            f_old = f_new
+                            if np.random.random() < 1-self.boltzmann(2*J, T):
+                                f_new.append(neighb)  #adding neighbour to new frontier
+                                c.append(neighb)   #adding neighbour to the cluster of spins that will be flipped
+            f_old = f_new   #updating the frontier
         
         #checking whether to flip cluster based on field strength:
         field_energy_difference=self.de_cluster_field(c, J, h, mu, T)
@@ -106,12 +106,12 @@ class Board:
             self.flip_cluster(c)
 
             
-    def neighbours(self,pos):
+    def neighbours(self,pos):   #returns all the adjacent neighbours of a given spin
         i,j=pos
         return [((i-1)%self.size,j),(i,(j+1)%self.size),((i+1)%self.size,j), (i, (j-1)%self.size)]    
 
     
-    def check_cluster(self, cluster, neighb): #check to see whether a position is already in the stack
+    def check_cluster(self, cluster, neighb): #check to see whether a position is already in the cluster
         for pair in cluster:
             if np.array_equal(pair,neighb):
                 return True
@@ -182,8 +182,9 @@ def metropolis_animation(board, update_skip, num_frames, J, h, mu, T): #update_s
     im2, = ax2.plot([], [], color=(0,0,1))
     
     ax1.set_title('Metropolis')
+    ax2.set_title('Magnetisation')
     
-    def func(n,mag):
+    def func(n,mag):    #generates frames of animation
         
         for j in range(update_skip):
             board.update_metropolis(J,h,mu,T)
@@ -223,8 +224,9 @@ def wolff_animation(board, update_skip, num_frames, J, h, mu, T):
     im2, = ax2.plot([], [], color=(0,0,1))
     
     ax1.set_title('Wolff')
+    ax2.set_title('Magnetisation')
     
-    def func(n,mag):
+    def func(n,mag):   #generates frames of animation
         for j in range(update_skip):
             board.update_wolff(J,h,mu,T)
         im.set_array(board.grid)
@@ -244,60 +246,12 @@ def wolff_animation(board, update_skip, num_frames, J, h, mu, T):
     animation.FuncAnimation(fig, func, fargs=(mag,),frames=num_frames, interval=30, blit=True)
 
 
-"""
-Investigations
-"""
 
-def heat_capacity(board, J, h, mu, T):
-    e=board.board_energy(J,h,mu)
-    m=board.board_magnetisation()
-    e_var=0
-    e_mean=e
-    m_var=0
-    m_mean=m
-    
-    for i in range(100): #Welford's method to find mean and variance
-        board.update_metropolis(J,h,mu,T)
-        
-        e=board.board_energy(J,h,mu)
-        m=board.board_magnetisation()
-        
-        e_mean_temp=e_mean + (e-e_mean)/(i+1)
-        m_mean_temp=m_mean + (m-m_mean)/(i+1)
-        
-        e_var = (i*e_var + (e-e_mean)*(e-e_mean_temp))/(i+1)
-        m_var = (i*m_var + (m-m_mean)*(m-m_mean_temp))/(i+1)
-        
-        e_mean=e_mean_temp
-        m_mean=m_mean_temp
-        if i%50==0:
-            print(i)
-
-    return e_var / (k*(T**2))
-
-
-h=0
-def magnetisation(board, temp):
-    board.reset_board()
-    for i in range(50000):
-        board.update_metropolis(J, h, mu, temp)
-    return abs(board.board_magnetisation())
-
-def magnetisation_list(board):
-    l=[]
-    for t in range(10, 50,4):
-        print('Temp ', t/10)
-        m=magnetisation(board, t/10)
-        l.append((t/10, m))
-    return l
-
-
-"""
 #Examples
 
 
 #Make 20*20 board:
-board = Board(20)
+board = Board(50)
 
 #display board
 board.display_board()
@@ -311,22 +265,10 @@ board.reset_board()
 
 #Make animation
 update_skip = 1                                                        
-num_frames = 100
-metropolis_animation(board, update_skip, num_frames, J, h, mu, T)
+num_frames = 10000
+#metropolis_animation(board, update_skip, num_frames, J, h, mu, T)
 board.reset_board()
-#wolff_animation(board, update_skip, num_frames, J, h, mu, T)
-
-"""
-
-
-
-
-
-
-
-
-
-
+wolff_animation(board, update_skip, num_frames, J, h, mu, T)
 
 
 

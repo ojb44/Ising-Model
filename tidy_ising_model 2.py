@@ -197,7 +197,7 @@ def metropolis_animation(board, update_skip, num_frames, J, h, mu, T): #update_s
         lim = ax2.set_xlim(0, n+1)
         
         if n==num_frames-1:  #for when animation repeats
-            #ax2.cla()
+            im2.cla()
             board.reset_board()
         
         return im, im2
@@ -237,7 +237,7 @@ def wolff_animation(board, update_skip, num_frames, J, h, mu, T):
         im2.set_ydata(np.array(mag[len(mag)-n:])) 
         lim = ax2.set_xlim(0, n+1)
         if n==num_frames-1:
-            #ax2.cla()
+            im2.cla()
             board.reset_board()
             mag=[]
         
@@ -264,11 +264,11 @@ board.update_wolff(J, h, mu, T)
 board.reset_board()
 
 #Make animation
-update_skip = 1                                                        
+update_skip = 10                                                        
 num_frames = 10000
-#metropolis_animation(board, update_skip, num_frames, J, h, mu, T)
-board.reset_board()
-wolff_animation(board, update_skip, num_frames, J, h, mu, T)
+metropolis_animation(board, update_skip, num_frames, J, h, mu, 0.01)
+#board.reset_board()
+#wolff_animation(board, 1, num_frames, J, h, mu, T)
 
 
 

@@ -266,7 +266,7 @@ board.reset_board()
 #Make animation
 update_skip = 10                                                        
 num_frames = 10000
-metropolis_animation(board, update_skip, num_frames, J, h, mu, 0.01)
+metropolis_animation(board, update_skip, num_frames, J, h, mu, T)
 #board.reset_board()
 #wolff_animation(board, 1, num_frames, J, h, mu, T)
 

@@ -246,9 +246,9 @@ def wolff_animation(board, update_skip, num_frames, J, h, mu, T):
     animation.FuncAnimation(fig, func, fargs=(mag,),frames=num_frames, interval=30, blit=True)
 
 
-
-#Examples
-
+"""
+Examples
+"""
 
 #Make 20*20 board:
 board = Board(50)

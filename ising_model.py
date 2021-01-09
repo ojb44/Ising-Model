@@ -18,7 +18,7 @@ h=0
 mu=1
 k=1
 
-#simulation is build around the Board object, representing a square 2d grid of spins with periodic boundary conditions
+#simulation is built around the Board object, representing a square 2d grid of spins with periodic boundary conditions
 
 class Board:
 
@@ -273,6 +273,87 @@ metropolis_animation(board, update_skip, num_frames, J, h, mu, T)
 
 
 
+
+
+
+"""
+Investigating some properties
+"""
+
+#Aim to plot magnetisation M, energy E, heat capacity c, and susceptibility chi, as functions of temperature
+#Note that the following can also be done with the metropolis algorithm (just replace update_wolff with update_metropolis), but it takes significantly longer to complete - you will need to increase the update numbers by a factor of around 100
+
+n=15  #board size
+equi_updates = 100  #number of updates to get board to equilibrium config
+calc_updates = 1000  #number of updates to perform calculations
+low_temp = 0.5
+high_temp = 3.5
+num_temps = 30
+T_range = np.linspace(low_temp, high_temp, num_temps)  #range of temperatures which will be plotted
+
+
+#lists for values of M, E, c, chi
+E=np.zeros(num_temps)
+M=np.zeros(num_temps)
+c=np.zeros(num_temps)
+chi=np.zeros(num_temps)
+
+
+for i in range(num_temps):
+    print('Current temp ', T_range[i])
+    board2 = Board(n)
+    T=T_range[i]
+    sum_energy=0
+    sum_mag=0
+    sum_energy_squ=0   #will be used to calculate variance for heat capacity/susceptibility
+    sum_mag_squ=0
+    
+    for j in range(equi_updates):
+        board2.update_wolff(J, h, mu, T)
+        
+    for j in range(calc_updates):
+        board2.update_wolff(J, h, mu, T)
+        energy=board2.board_energy(J, h, mu)
+        mag=board2.board_magnetisation()
+        
+        sum_energy += energy
+        sum_mag += abs(mag)
+        sum_energy_squ += energy**2
+        sum_mag_squ += mag**2
+        
+    E[i] = (sum_energy/calc_updates) / n**2  
+    M[i] = sum_mag/calc_updates  / n**2
+    c[i] = (1/(k*(T**2))) * (sum_energy_squ/calc_updates - (sum_energy/calc_updates)**2) / n**2  #c = k*beta**2 * (<E**2>-<E>**2)
+    chi[i] = (1/(k*T)) * (sum_mag_squ/calc_updates - (sum_mag/calc_updates)**2) / n**2     #chi = beta * (<M**2>-<M>**2)
+    
+
+
+# plot the different charts
+fig = plt.figure() # plot the calculated values    
+
+fig.add_subplot(2, 2, 1)
+plt.scatter(T_range, E, marker='o')
+plt.xlabel("Temperature (T)")
+plt.ylabel("Energy ") 
+plt.axis('tight')
+
+fig.add_subplot(2, 2, 2)
+plt.scatter(T_range, abs(M), marker='o')
+plt.xlabel("Temperature (T)") 
+plt.ylabel("Magnetization ")  
+plt.axis('tight')
+
+fig.add_subplot(2, 2, 3)
+plt.scatter(T_range, c, marker='o')
+plt.xlabel("Temperature (T)") 
+plt.ylabel("Specific Heat ") 
+plt.axis('tight')   
+
+fig.add_subplot(2, 2, 4);
+plt.scatter(T_range, chi, marker='o')
+plt.xlabel("Temperature (T)")
+plt.ylabel("Susceptibility")  
+plt.axis('tight')
 
 
             
